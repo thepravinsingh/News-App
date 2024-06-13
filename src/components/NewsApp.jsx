@@ -3,23 +3,25 @@ import News from "./News";
 import "./NewsApp.css";
 
 const NewsApp = () => {
-  const apiKey = `c3a0989bfc554641baff9b10901a0f52`;
+  const apiUrl = import.meta.env.VITE_NEWS_API_URL;
+  const apiKey = import.meta.env.VITE_NEWS_API_KEY;
   const [newsList, setNewsList] = useState([]);
   const [query, setQuery] = useState("tesla");
-  const apiUrl = `https://newsapi.org/v2/everything?q=${query}&from=2024-05-12&sortBy=publishedAt&apiKey=${apiKey}`;
   const queryInputRef = useRef(null);
 
   useEffect(() => {
-    fetchData();
+    const fetchUrl = `${apiUrl}?q=${query}&from=2024-05-13&sortBy=publishedAt&apiKey=${apiKey}`;
+    fetchData(fetchUrl);
   }, [query]);
 
-  async function fetchData() {
+  async function fetchData(fetchUrl) {
     try {
-      const response = await fetch(apiUrl);
+      const response = await fetch(fetchUrl);
       const jsonData = await response.json();
-      setNewsList(jsonData.articles);
+      setNewsList(jsonData.articles || []);
     } catch (e) {
       console.error(e, "error occurred");
+      setNewsList([]);
     }
   }
 
@@ -31,7 +33,16 @@ const NewsApp = () => {
 
   return (
     <div className="news-app">
-        <h1 style={{fontFamily:"monospace", fontSize:"3rem",textAlign:"left", marginBottom:"20px"}}>News Daily</h1>
+      <h1
+        style={{
+          fontFamily: "monospace",
+          fontSize: "3rem",
+          textAlign: "left",
+          marginBottom: "20px",
+        }}
+      >
+        News Daily
+      </h1>
       <form onSubmit={handleSubmit}>
         <input className="query-input" ref={queryInputRef} type="text" />
         <input
@@ -44,14 +55,25 @@ const NewsApp = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 48%)",
+          gridTemplateColumns: newsList.length > 0 ? "repeat(2, 48%)" : "1fr",
           justifyContent: "space-between",
           rowGap: "20px",
         }}
       >
-        {newsList.map((news, index) => {
-          return <News key={index} news={news} />;
-        })}
+        {Array.isArray(newsList) && newsList.length > 0 ? (
+          newsList.map((news, index) => {
+            return <News key={index} news={news} />;
+          })
+        ) : (
+          <p
+            style={{
+              fontFamily: "monospace",
+              fontSize: "2rem",
+            }}
+          >
+            No news articles found
+          </p>
+        )}
       </div>
     </div>
   );
